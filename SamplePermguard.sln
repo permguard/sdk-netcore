@@ -1,14 +1,14 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleJsonPermguard", "SampleJsonPermguard\SampleJsonPermguard.csproj", "{357F1272-29F3-44B3-9D7C-E08AA2D0247F}"
-EndProject
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+# Copyright (c) 2022 Nitro Agility S.r.l.
+# SPDX-License-Identifier: Apache-2.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Permguard", "Permguard\Permguard.csproj", "{0FBE66D2-F2E9-46BA-B5ED-7453928366B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleEvaluationsPermguard", "SampleEvaluationsPermguard\SampleEvaluationsPermguard.csproj", "{7621DD44-6EED-4F7A-9D29-1741FD71BDDD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Permguard.Tests", "Permguard.Tests\Permguard.Tests.csproj", "{7CE9F3DC-D137-4B58-B3CA-B97416F84D3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAtomicPermguard", "SampleAtomicPermguard\SampleAtomicPermguard.csproj", "{3BF047EA-B460-4A8E-B6DA-4BCCB2E3A51E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePermguardDocuments", "SamplePermguardDocuments\SamplePermguardDocuments.csproj", "{8E5DBE37-359B-4A8B-BF04-7809934A03AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleJsonPermguard", "SampleJsonPermguard\SampleJsonPermguard.csproj", "{357F1272-29F3-44B3-9D7C-E08AA2D0247F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,25 +16,17 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0FBE66D2-F2E9-46BA-B5ED-7453928366B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0FBE66D2-F2E9-46BA-B5ED-7453928366B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FBE66D2-F2E9-46BA-B5ED-7453928366B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FBE66D2-F2E9-46BA-B5ED-7453928366B6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7621DD44-6EED-4F7A-9D29-1741FD71BDDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7621DD44-6EED-4F7A-9D29-1741FD71BDDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7621DD44-6EED-4F7A-9D29-1741FD71BDDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7621DD44-6EED-4F7A-9D29-1741FD71BDDD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3BF047EA-B460-4A8E-B6DA-4BCCB2E3A51E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BF047EA-B460-4A8E-B6DA-4BCCB2E3A51E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BF047EA-B460-4A8E-B6DA-4BCCB2E3A51E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BF047EA-B460-4A8E-B6DA-4BCCB2E3A51E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E5DBE37-359B-4A8B-BF04-7809934A03AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E5DBE37-359B-4A8B-BF04-7809934A03AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E5DBE37-359B-4A8B-BF04-7809934A03AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E5DBE37-359B-4A8B-BF04-7809934A03AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CE9F3DC-D137-4B58-B3CA-B97416F84D3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CE9F3DC-D137-4B58-B3CA-B97416F84D3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CE9F3DC-D137-4B58-B3CA-B97416F84D3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CE9F3DC-D137-4B58-B3CA-B97416F84D3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{357F1272-29F3-44B3-9D7C-E08AA2D0247F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

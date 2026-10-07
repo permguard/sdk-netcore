@@ -1,4 +1,4 @@
-# Copyright 2024 Nitro Agility S.r.l.
+# Copyright (c) 2022 Nitro Agility S.r.l.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,17 @@ includes:
     optional: true
 
 tasks:
+  check:
+    desc: Build and test the SDK, example, and transport integration tests.
+    cmds:
+      - dotnet restore SamplePermguard.sln
+      - dotnet test SamplePermguard.sln --no-restore --configuration Release -m:1
+
+  pack:
+    desc: Build the NuGet and symbol packages locally.
+    cmds:
+      - dotnet pack Permguard/Permguard.csproj --configuration Release --output output
+
   notices:
     desc: Regenerate THIRD_PARTY_NOTICES.md from the resolved dependencies.
     cmds:

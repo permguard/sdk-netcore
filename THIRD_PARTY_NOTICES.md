@@ -1,3 +1,6 @@
+<!-- Copyright (c) 2022 Nitro Agility S.r.l. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Third-Party Notices
 
 The Permguard .NET SDK is distributed under the Apache License, Version 2.0. It depends on the
@@ -15,10 +18,10 @@ covers what is distributed, and a test harness is not.
 
 | Package | Version | Licence | Source |
 | ------- | ------- | ------- | ------ |
-| `Google.Protobuf` | 3.30.0-rc2 | BSD-3-Clause | https://github.com/protocolbuffers/protobuf |
-| `Grpc.Core.Api` | 2.70.0-pre1 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
-| `Grpc.Net.Client` | 2.70.0-pre1 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
-| `Grpc.Net.Common` | 2.70.0-pre1 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
+| `Google.Protobuf` | 3.30.0 | BSD-3-Clause | https://github.com/protocolbuffers/protobuf |
+| `Grpc.Core.Api` | 2.70.0 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
+| `Grpc.Net.Client` | 2.70.0 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
+| `Grpc.Net.Common` | 2.70.0 | Apache-2.0 | https://github.com/grpc/grpc-dotnet |
 | `Microsoft.Extensions.Logging.Abstractions` | 6.0.0 | MIT | https://dot.net/ |
 
 ## Packages without a declared licence

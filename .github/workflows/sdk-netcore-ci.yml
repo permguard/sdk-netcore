@@ -1,17 +1,4 @@
-# Copyright 2024 Nitro Agility S.r.l.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# Copyright (c) 2022 Nitro Agility S.r.l.
 # SPDX-License-Identifier: Apache-2.0
 
 name: Publish to NuGet
@@ -27,33 +14,36 @@ permissions:
 env:
   PROJECT_PATH: ./Permguard/Permguard.csproj
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/output
-  NUGET_SOURCE_URL: "https://api.nuget.org/v3/index.json"
+  NUGET_SOURCE_URL: https://api.nuget.org/v3/index.json
 
 jobs:
   publish:
-    name: "Publish to NuGet Gallery"
-    runs-on: "windows-latest"
+    name: Test, pack, and publish
+    runs-on: windows-latest
     steps:
-      - name: "Checkout"
-        uses: actions/checkout@v4
-        
-      - name: "Install Dotnet"
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: 8.0.x
 
-      - name: "Extract version from tag"
+      - name: Extract version from tag
         shell: bash
-        run: echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        run: echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
 
-      - name: "Restore packages"
-        run: dotnet restore ${{ env.PROJECT_PATH }}
-        
-      - name: "Build project"
-        run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
-        
-      - name: "Pack project"
-        run: dotnet pack ${{ env.PROJECT_PATH }} -p:PackageVersion=${{ env.PACKAGE_VERSION }} --no-restore --no-build --configuration Release --include-symbols --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
-
-      - name:  "Push package"
-        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/Permguard.${{ env.PACKAGE_VERSION }}.nupkg -s ${{ env.NUGET_SOURCE_URL }} -k ${{ secrets.NUGET_AUTH_TOKEN }}
+      - name: Restore
+        run: dotnet restore SamplePermguard.sln
+      - name: Test
+        run: dotnet test SamplePermguard.sln --no-restore --configuration Release -m:1
+      - name: Pack
+        run: >-
+          dotnet pack ${{ env.PROJECT_PATH }}
+          -p:PackageVersion=${{ env.PACKAGE_VERSION }}
+          --no-restore --configuration Release
+          --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+      - name: Push package
+        run: >-
+          dotnet nuget push
+          "${{ env.PACKAGE_OUTPUT_DIRECTORY }}/Permguard.${{ env.PACKAGE_VERSION }}.nupkg"
+          --source "${{ env.NUGET_SOURCE_URL }}"
+          --api-key "${{ secrets.NUGET_AUTH_TOKEN }}"
+          --skip-duplicate

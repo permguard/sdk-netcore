@@ -1,128 +1,122 @@
-// Copyright 2025 Nitro Agility S.r.l.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+// Copyright (c) 2022 Nitro Agility S.r.l.
 // SPDX-License-Identifier: Apache-2.0
 
-syntax="proto3";
+syntax = "proto3";
+
+package permguard.data.v1;
+
+option csharp_namespace = "Permguard.Internal.Grpc.V1";
 
 import "google/protobuf/struct.proto";
 
-package policydecisionpoint;
-
-// PolicyStore is the location where policies are maintained.
-message PolicyStore {
-  string Kind = 1;
-  string ID = 2;
+service PolicyDecisionPoint {
+  rpc Evaluate(EvaluateRequest) returns (EvaluateResponse);
+  rpc EvaluateMany(EvaluateRequest) returns (EvaluateResponse);
+  rpc GetConfiguration(GetConfigurationRequest) returns (GetConfigurationResponse);
 }
 
-// Principal represents the entity making the request.
-message Principal {
-  string Type = 1;
-  string ID = 2;
-  optional string Source = 3;
-  optional string IdentityToken = 4;
-  optional string AccessToken = 5;
+message Entity {
+  string type = 1;
+  string id = 2;
+  google.protobuf.Struct properties = 3;
 }
 
-// Entities represent the entities provided in the context for the authorization decision.
-message Entities {
-  string Schema = 1;
-  repeated google.protobuf.Struct Items = 2;
-}
-
-// Subject is the entity on which the authorization decision is made.
-message Subject {
-  string Type = 1;
-  string ID = 2;
-  optional string Source = 3;
-  optional google.protobuf.Struct Properties = 4;
-}
-
-// Resource is the entity on which the authorization decision is made.
-message Resource {
-  string Type = 1;
-  string ID = 2;
-  optional google.protobuf.Struct Properties = 3;
-}
-
-// Action is the operation on which the authorization decision is made.
 message Action {
-  string Name = 1;
-  optional google.protobuf.Struct Properties = 2;
+  string name = 1;
+  google.protobuf.Struct properties = 2;
 }
 
-// AuthorizationCheck Request
-
-// AuthorizationModelRequest is the input context for making the authorization decision.
-message AuthorizationModelRequest {
-  int64 ZoneID = 1;
-  PolicyStore PolicyStore = 2;
-  optional Principal Principal = 3;
-  optional Entities Entities = 4;
+message PartitionInput {
+  string type = 1;
+  google.protobuf.Value data = 2;
 }
 
-// EvaluationRequest represents the request to evaluate the authorization decision.
-message EvaluationRequest {
-  optional string RequestID = 1;
-  optional Subject Subject = 2;
-  optional Resource Resource = 3;
-  optional Action Action = 4;
-  optional google.protobuf.Struct Context = 5;
+// Presence is significant: absent inherits request inputs; present and empty replaces them.
+message PartitionInputs {
+  map<string, PartitionInput> inputs = 1;
 }
 
-// AuthorizationCheckRequest represents the request to perform an authorization decision.
-message AuthorizationCheckRequest {
-  AuthorizationModelRequest AuthorizationModel = 1;
-  optional string RequestID = 2;
-  optional Subject Subject = 3;
-  optional Resource Resource = 4;
-  optional Action Action = 5;
-  optional google.protobuf.Struct Context = 6;
-  repeated EvaluationRequest Evaluations = 7;
+message Evaluation {
+  reserved 5, 7;
+  reserved "entities";
+
+  Entity subject = 1;
+  Entity resource = 2;
+  Action action = 3;
+  google.protobuf.Struct context = 4;
+  string request_id = 6;
+  PartitionInputs partition_inputs = 8;
 }
 
-// AuthorizationCheck Response
-
-// ReasonResponse provides the rationale for the response.
-message ReasonResponse {
-  string Code = 1;
-  string Message = 2;
+enum EvaluationsSemantic {
+  EVALUATIONS_SEMANTIC_UNSPECIFIED = 0;
+  EVALUATIONS_SEMANTIC_EXECUTE_ALL = 1;
+  EVALUATIONS_SEMANTIC_DENY_ON_FIRST_DENY = 2;
+  EVALUATIONS_SEMANTIC_PERMIT_ON_FIRST_PERMIT = 3;
 }
 
-// ContextResponse represents the context included in the response.
-message ContextResponse {
-  string ID = 1;
-  ReasonResponse ReasonAdmin = 2;
-  ReasonResponse ReasonUser = 3;
+message EvaluateRequest {
+  reserved 9;
+  reserved "entities";
+
+  string zone = 1;
+  string ledger = 2;
+  string profile = 3;
+  Entity subject = 4;
+  Entity resource = 5;
+  Action action = 6;
+  google.protobuf.Struct context = 7;
+  Entity principal = 8;
+  repeated Evaluation evaluations = 10;
+  EvaluationsSemantic evaluations_semantic = 11;
+  string request_id = 12;
+  map<string, PartitionInput> partition_inputs = 13;
 }
 
-// EvaluationResponse represents the result of the evaluation process.
-message EvaluationResponse {
-  bool Decision = 1;
-  optional string RequestID = 2;
-  optional ContextResponse Context = 3;
+message Reason {
+  string code = 1;
+  string message = 2;
 }
 
-// AuthorizationCheckResponse represents the outcome of the authorization decision.
-message AuthorizationCheckResponse {
-  bool Decision = 1;
-  optional string RequestID = 2;
-  optional ContextResponse Context = 3;
-  repeated EvaluationResponse Evaluations = 4;
+message DecisionContext {
+  string id = 1;
+  Reason reason_admin = 2;
+  Reason reason_user = 3;
+  repeated string policies = 4;
+  repeated string absent_inputs = 5;
 }
 
-// V1PDPService	is the service for the Policy Decision Point.
-service V1PDPService {
-  rpc AuthorizationCheck(AuthorizationCheckRequest) returns (AuthorizationCheckResponse) {}
+message Decision {
+  bool decision = 1;
+  string request_id = 2;
+  DecisionContext context = 3;
+}
+
+message EvaluateResponse {
+  bool decision = 1;
+  string request_id = 2;
+  DecisionContext context = 3;
+  repeated Decision evaluations = 4;
+}
+
+message GetConfigurationRequest {}
+
+message Endpoints {
+  string evaluation = 1;
+  string evaluations = 2;
+}
+
+message StoreScope {
+  string in = 1;
+  string zone = 2;
+  string ledger = 3;
+  string profile = 4;
+}
+
+message GetConfigurationResponse {
+  string interface = 1;
+  string pdp = 2;
+  Endpoints endpoints = 3;
+  repeated string capabilities = 4;
+  StoreScope store_scope = 5;
 }

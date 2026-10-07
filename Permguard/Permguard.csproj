@@ -1,44 +1,48 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<!-- Copyright (c) 2022 Nitro Agility S.r.l. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <LangVersion>10</LangVersion>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Title>Permguard</Title>
-        <Authors>NitroAgiltiy SRL</Authors>
-        <Description>This Permguard SDK for C# and DoNet Core</Description>
-        <Copyright>Apache License 2.0</Copyright>
-        <PackageProjectUrl>www.permguard.com</PackageProjectUrl>
-        <PackageLicenseUrl>https://www.permguard.com/docs/0.0.x/legal-licenses/third-party-technologies/</PackageLicenseUrl>
-        <PackageIcon>symbol.png</PackageIcon>
-        <RepositoryUrl>https://github.com/permguard/sdk-netcore</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageTags>Scurity</PackageTags>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <Title>Permguard</Title>
+    <PackageId>Permguard</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Nitro Agility S.r.l.</Authors>
+    <Description>Official .NET SDK for the native Permguard PDP v1 HTTP and gRPC interfaces.</Description>
+    <Copyright>Copyright (c) 2022 Nitro Agility S.r.l.</Copyright>
+    <PackageProjectUrl>https://www.permguard.com/</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>symbol.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/permguard/sdk-netcore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>authorization;security;pdp;permguard;grpc</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <Protobuf Include="Grpc\pdp.proto" GrpcServices="Client" />
-    </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Grpc/pdp.proto" GrpcServices="Client" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Google.Protobuf" Version="3.30.0-rc2" />
-      <PackageReference Include="Grpc.Net.Client" Version="2.70.0-pre1" />
-      <PackageReference Include="Grpc.Tools" Version="2.70.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.30.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.70.0" PrivateAssets="all" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <None Update="symbol.png">
-        <Pack>True</Pack>
-        <PackagePath></PackagePath>
-      </None>
-      <None Include="README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
-
+  <ItemGroup>
+    <None Include="../LICENSE" Pack="true" PackagePath="" Link="LICENSE" />
+    <None Include="../NOTICE.md" Pack="true" PackagePath="" Link="NOTICE.md" />
+    <None Include="../THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="" Link="THIRD_PARTY_NOTICES.md" />
+    <None Include="../README.md" Pack="true" PackagePath="" Link="README.md" />
+    <None Update="symbol.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>
