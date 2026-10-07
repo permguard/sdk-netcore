@@ -4,16 +4,17 @@
 using Permguard;
 using PdpAction = Permguard.Action;
 
-var endpoint = args.FirstOrDefault() ?? "http://127.0.0.1:9094";
+var endpoint = args.FirstOrDefault()
+    ?? Environment.GetEnvironmentVariable("PERMGUARD_PDP_URL")
+    ?? "grpc://localhost:7443";
 await using var client = new Client(endpoint);
 
-var response = await client.EvaluateAsync(new EvaluateRequest("acme", "main")
+var response = await client.EvaluateAsync(new EvaluateRequest("acme", "main-ledger")
 {
-    Profile = "default",
-    Subject = new Entity("user", "amy"),
-    Resource = new Entity("document", "quarterly-report"),
+    Profile = "gateway",
+    Subject = new Entity("User", "alice"),
+    Resource = new Entity("Document", "budget-2026"),
     Action = new PdpAction("read"),
-    Context = new Dictionary<string, object?> { ["ip"] = "192.0.2.10" },
     RequestId = Guid.NewGuid().ToString(),
 });
 
