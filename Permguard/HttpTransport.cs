@@ -15,9 +15,11 @@ internal sealed class HttpTransport : ITransport
 
     internal HttpTransport(Uri endpoint, ClientOptions options)
     {
-        if (endpoint.AbsolutePath != "/" || endpoint.Query.Length != 0 || endpoint.Fragment.Length != 0)
+        if (endpoint.AbsolutePath != "/" || endpoint.Query.Length != 0 || endpoint.Fragment.Length != 0 ||
+            endpoint.UserInfo.Length != 0)
         {
-            throw new ArgumentException("HTTP Permguard endpoint must not contain a path, query, or fragment.");
+            throw new ArgumentException(
+                "HTTP Permguard endpoint must not contain credentials, a path, query, or fragment.");
         }
 
         ownsClient = options.HttpClient is null;
@@ -80,6 +82,7 @@ internal sealed class HttpTransport : ITransport
     private static string ClassFor(HttpStatusCode status) => status switch
     {
         HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity => "validation",
+        HttpStatusCode.Conflict => "conflict",
         HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => "authorization",
         HttpStatusCode.NotFound => "not_found",
         HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout => "unavailable",

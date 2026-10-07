@@ -15,8 +15,10 @@ internal sealed class GrpcTransport : ITransport
 
     internal GrpcTransport(Uri endpoint, ClientOptions options)
     {
-        if (endpoint.AbsolutePath != "/" || endpoint.Query.Length != 0 || endpoint.Fragment.Length != 0)
-            throw new ArgumentException("gRPC Permguard endpoint must not contain a path, query, or fragment.");
+        if (endpoint.AbsolutePath != "/" || endpoint.Query.Length != 0 || endpoint.Fragment.Length != 0 ||
+            endpoint.UserInfo.Length != 0)
+            throw new ArgumentException(
+                "gRPC Permguard endpoint must not contain credentials, a path, query, or fragment.");
 
         var scheme = endpoint.Scheme.Equals("grpcs", StringComparison.OrdinalIgnoreCase) ? "https" : "http";
         var address = new Uri($"{scheme}://{endpoint.Authority}");
@@ -62,7 +64,8 @@ internal sealed class GrpcTransport : ITransport
 
     private static string ClassFor(StatusCode status) => status switch
     {
-        StatusCode.InvalidArgument or StatusCode.FailedPrecondition or StatusCode.OutOfRange => "validation",
+        StatusCode.InvalidArgument or StatusCode.OutOfRange => "validation",
+        StatusCode.FailedPrecondition or StatusCode.AlreadyExists or StatusCode.Aborted => "conflict",
         StatusCode.Unauthenticated or StatusCode.PermissionDenied => "authorization",
         StatusCode.NotFound => "not_found",
         StatusCode.Unavailable or StatusCode.DeadlineExceeded => "unavailable",

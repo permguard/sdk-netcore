@@ -75,6 +75,29 @@ public sealed class ClientTests
         Assert.Equal("validation", refusal.ErrorClass);
         Assert.Equal("invalid_ledger", refusal.Code);
         Assert.Equal(StatusCode.InvalidArgument, refusal.GrpcStatus);
+
+        var conflict = await Assert.ThrowsAsync<Refusal>(() =>
+            client.EvaluateAsync(Request() with { Ledger = "conflict" }));
+        Assert.Equal("conflict", conflict.ErrorClass);
+        Assert.Equal(StatusCode.FailedPrecondition, conflict.GrpcStatus);
+    }
+
+    [Fact]
+    public async Task HttpConflictFallbackAndEndpointValidationMatchSharedContract()
+    {
+        var handler = new StubHandler();
+        using var http = new HttpClient(handler);
+        await using var client = new PdpClient("http://pdp.example", new ClientOptions
+        {
+            HttpClient = http,
+            Headers = new Dictionary<string, string> { ["x-tenant"] = "acme" },
+        });
+
+        var conflict = await Assert.ThrowsAsync<Refusal>(() =>
+            client.EvaluateAsync(Request() with { Ledger = "conflict" }));
+        Assert.Equal("conflict", conflict.ErrorClass);
+        Assert.Equal(409, conflict.HttpStatus);
+        Assert.Throws<ArgumentException>(() => new PdpClient("http://user:secret@pdp.example"));
     }
 
     private static Permguard.EvaluateRequest Request() => new("acme", "main")
@@ -111,6 +134,17 @@ public sealed class ClientTests
             Tenant = request.Headers.GetValues("x-tenant").Single();
             if (request.Content is not null)
                 EvaluationJson = await request.Content.ReadAsStringAsync(cancellationToken);
+
+            if (EvaluationJson.Contains("\"ledger\":\"conflict\"", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.Conflict)
+                {
+                    Content = new StringContent(
+                        """{"code":"ledger_conflict","message":"ledger changed"}""",
+                        Encoding.UTF8,
+                        "application/json"),
+                };
+            }
 
             var json = request.Method == HttpMethod.Get
                 ? """{"interface":"permguard.api.pdp.native.v1","pdp":"test","endpoints":{"evaluation":"/access/v1/evaluation","evaluations":"/access/v1/evaluations"},"capabilities":["grpc","http"],"store_scope":{"in":"request","zone":"zone","ledger":"ledger","profile":"profile"}}"""
@@ -171,6 +205,8 @@ public sealed class ClientTests
                 };
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "bad ledger"), trailers);
             }
+            if (request.Ledger == "conflict")
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, "ledger changed"));
             return Task.FromResult(new Permguard.Internal.Grpc.V1.EvaluateResponse
             {
                 Decision = true,
