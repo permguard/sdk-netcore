@@ -9,7 +9,6 @@ namespace Permguard;
 
 internal static class GrpcMapper
 {
-    private const long MaximumExactInteger = 9_007_199_254_740_991;
 
     internal static Proto.EvaluateRequest ToProto(EvaluateRequest source)
     {
@@ -109,15 +108,9 @@ internal static class GrpcMapper
 
     private static Value Number(JsonElement source)
     {
-        if (source.TryGetInt64(out var integer) &&
-            (integer > MaximumExactInteger || integer < -MaximumExactInteger))
-            throw new ArgumentOutOfRangeException(nameof(source),
-                $"Integer {integer} is not exactly representable by protobuf Value.");
-
-        var number = source.GetDouble();
-        if (double.IsNaN(number) || double.IsInfinity(number))
-            throw new ArgumentOutOfRangeException(nameof(source), "Number is not representable by protobuf Value.");
-        return Value.ForNumber(number);
+        // The server's rule, which the client checks before either transport (BUG-0307).
+        Values.Check(source);
+        return Value.ForNumber(source.GetDouble());
     }
 
     private static Proto.EvaluationsSemantic ToProto(EvaluationsSemantic semantic) => semantic switch

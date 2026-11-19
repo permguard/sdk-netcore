@@ -45,6 +45,7 @@ public sealed class Client : IAsyncDisposable
         EvaluateRequest request, bool many, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        Values.Check(request);
         return Bounded((deadline, token) => transport.EvaluateAsync(request, many, deadline, token), cancellationToken);
     }
 

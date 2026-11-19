@@ -152,6 +152,46 @@ public sealed class ClientTests
         }
     }
 
+    /// <summary>
+    /// BUG-0306, BUG-0307: a context value follows the server's rule before either transport sends
+    /// it: 2^53 crosses, an integer past it is value_unrepresentable, NaN and infinities are
+    /// payload_malformed, a typed refusal on HTTP and gRPC alike, never an unhandled exception.
+    /// </summary>
+    [Fact]
+    public async Task ContextValuesFollowTheServersRuleOnBothTransports()
+    {
+        await using var server = await GrpcServer.StartAsync();
+        var handler = new StubHandler();
+        using var stubbed = new HttpClient(handler);
+        await using var http = new PdpClient("http://pdp.example", new ClientOptions
+        {
+            HttpClient = stubbed,
+            Headers = new Dictionary<string, string> { ["x-tenant"] = "acme" },
+        });
+        await using var grpc = new PdpClient(server.Endpoint.Replace("http://", "grpc://"));
+        foreach (var client in new[] { http, grpc })
+        {
+            foreach (var value in new object[] { 9_007_199_254_740_992L, -9_007_199_254_740_992L, 0.5 })
+            {
+                var response = await client.EvaluateAsync(Request() with { Context = new Dictionary<string, object?> { ["n"] = value } });
+                Assert.True(response.Decision);
+            }
+            foreach (var (value, code) in new (object, string)[]
+                     {
+                         (9_007_199_254_740_993L, "value_unrepresentable"),
+                         (ulong.MaxValue, "value_unrepresentable"),
+                         (decimal.MaxValue, "value_unrepresentable"),
+                         (double.NaN, "payload_malformed"),
+                         (double.PositiveInfinity, "payload_malformed"),
+                     })
+            {
+                var refusal = await Assert.ThrowsAsync<Refusal>(() =>
+                    client.EvaluateAsync(Request() with { Context = new Dictionary<string, object?> { ["n"] = value } }));
+                Assert.Equal(("validation", code), (refusal.ErrorClass, refusal.Code));
+            }
+        }
+    }
+
     private static Permguard.EvaluateRequest Request() => new("acme", "main")
     {
         Profile = "default",
