@@ -41,7 +41,7 @@ internal sealed class GrpcTransport : ITransport
                 : await client.EvaluateAsync(proto, headers, deadline, cancellationToken).ResponseAsync.ConfigureAwait(false);
             return GrpcMapper.FromProto(response);
         }
-        catch (RpcException error) { throw ToRefusal(error); }
+        catch (RpcException error) when (!ClientSide(error)) { throw ToRefusal(error); }
     }
 
     public async Task<Configuration> GetConfigurationAsync(DateTime deadline, CancellationToken cancellationToken)
@@ -52,8 +52,17 @@ internal sealed class GrpcTransport : ITransport
                 new Proto.GetConfigurationRequest(), headers, deadline, cancellationToken).ResponseAsync.ConfigureAwait(false);
             return GrpcMapper.FromProto(response);
         }
-        catch (RpcException error) { throw ToRefusal(error); }
+        catch (RpcException error) when (!ClientSide(error)) { throw ToRefusal(error); }
     }
+
+    /// <summary>
+    /// What the client's own gRPC library reported, not the data plane: a deadline, a cancellation, a
+    /// data plane it could not reach. <see cref="Client"/> reports them as the HTTP transport's
+    /// (BUG-0284); a status the data plane sent carries its own code.
+    /// </summary>
+    internal static bool ClientSide(RpcException error) =>
+        error.Trailers.GetValue("permguard-error-code") is null &&
+        error.StatusCode is StatusCode.Cancelled or StatusCode.DeadlineExceeded or StatusCode.Unavailable;
 
     private static Refusal ToRefusal(RpcException error) => new(
         error.Trailers.GetValue("permguard-error-class") ?? ClassFor(error.StatusCode),

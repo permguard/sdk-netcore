@@ -100,6 +100,58 @@ public sealed class ClientTests
         Assert.Throws<ArgumentException>(() => new PdpClient("http://user:secret@pdp.example"));
     }
 
+    /// <summary>A handler that never answers.</summary>
+    private sealed class SilentHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            throw new InvalidOperationException("unreachable");
+        }
+    }
+
+    private static int ClosedPort()
+    {
+        var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
+    /// <summary>
+    /// BUG-0284: a call that fails in the client is the same refusal on HTTP and gRPC, class
+    /// unavailable with code timeout or unreachable, never internal; the caller's own cancellation is
+    /// an OperationCanceledException, not a refusal.
+    /// </summary>
+    [Fact]
+    public async Task ClientFailuresAreTheSameRefusalOnBothTransports()
+    {
+        await using var server = await GrpcServer.StartAsync();
+        using var silentHttp = new HttpClient(new SilentHandler());
+        var quick = TimeSpan.FromMilliseconds(300);
+        await using var http = new PdpClient("http://pdp.example", new ClientOptions { HttpClient = silentHttp, Timeout = quick });
+        await using var grpc = new PdpClient(server.Endpoint.Replace("http://", "grpc://"), new ClientOptions { Timeout = quick });
+        foreach (var client in new[] { http, grpc })
+        {
+            var refusal = await Assert.ThrowsAsync<Refusal>(() => client.EvaluateAsync(Request() with { Ledger = "silent" }));
+            Assert.Equal((Refusal.Unavailable, Refusal.Timeout), (refusal.ErrorClass, refusal.Code));
+
+            using var cancelled = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => client.EvaluateAsync(Request() with { Ledger = "silent" }, cancelled.Token));
+        }
+
+        var port = ClosedPort();
+        foreach (var endpoint in new[] { $"http://127.0.0.1:{port}", $"grpc://127.0.0.1:{port}" })
+        {
+            await using var client = new PdpClient(endpoint, new ClientOptions { Timeout = TimeSpan.FromSeconds(3) });
+            var refusal = await Assert.ThrowsAsync<Refusal>(() => client.EvaluateAsync(Request()));
+            Assert.Equal((Refusal.Unavailable, Refusal.Unreachable), (refusal.ErrorClass, refusal.Code));
+        }
+    }
+
     private static Permguard.EvaluateRequest Request() => new("acme", "main")
     {
         Profile = "default",
@@ -207,11 +259,19 @@ public sealed class ClientTests
             }
             if (request.Ledger == "conflict")
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, "ledger changed"));
+            if (request.Ledger == "silent")
+                return Silent();
             return Task.FromResult(new Permguard.Internal.Grpc.V1.EvaluateResponse
             {
                 Decision = true,
                 RequestId = request.RequestId,
             });
+        }
+
+        private static async Task<Permguard.Internal.Grpc.V1.EvaluateResponse> Silent()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30));
+            throw new InvalidOperationException("the client stopped waiting long before");
         }
 
         public override Task<GetConfigurationResponse> GetConfiguration(

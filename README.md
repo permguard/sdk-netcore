@@ -88,6 +88,8 @@ The same program is in [SampleJsonPermguard](SampleJsonPermguard/Program.cs); pa
 
 A deny is not an exception: it is a successful `EvaluateResponse` with `Decision == false`.
 Validation, authorization, availability and server failures throw `Refusal`, with their stable `ErrorClass` and `Code`, and the `HttpStatus` or `GrpcStatus` they came with.
+A call that fails in the client is a `Refusal` too, the same on HTTP and gRPC and in every Permguard SDK: class `unavailable` (`Refusal.Unavailable`) with code `timeout` (`Refusal.Timeout`) when the call's timeout passed, code `unreachable` (`Refusal.Unreachable`) when the data plane could not be reached.
+A cancellation of your own `CancellationToken` is not a refusal: it throws `OperationCanceledException`.
 
 ## Partition inputs
 
@@ -204,6 +206,9 @@ dotnet restore SamplePermguard.sln
 dotnet test SamplePermguard.sln --configuration Release -m:1
 dotnet pack Permguard/Permguard.csproj --configuration Release
 ```
+
+The tests host an in-process gRPC data plane, so they need the ASP.NET Core 8 runtime (`Microsoft.AspNetCore.App` 8.x) beside the .NET 8 SDK; on a machine with only a newer runtime, `DOTNET_ROLL_FORWARD=Major` runs them on it.
+The project's version is a placeholder, `0.0.0`: a release takes its version from its tag, so the version to install is the latest on NuGet.
 
 The NuGet package includes `LICENSE`, `NOTICE.md`, `THIRD_PARTY_NOTICES.md` and this README.
 
