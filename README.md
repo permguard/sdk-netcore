@@ -54,7 +54,6 @@ try
 {
     var response = await client.EvaluateAsync(new EvaluateRequest("acme", "main-ledger")
     {
-        Profile = "gateway",
         Subject = new Entity("User", "alice"),
         Resource = new Entity("Document", "budget-2026"),
         Action = new PdpAction("read"),
@@ -70,6 +69,9 @@ catch (Refusal refusal)
 
 `Action` is also a name in `System`: the `PdpAction` alias keeps the two apart.
 The same program is in [SampleJsonPermguard](SampleJsonPermguard/Program.cs); pass an endpoint or set `PERMGUARD_PDP_URL` to point it at another data plane.
+
+A request that names no `profile` is decided by the ledger's `default` profile: the manifest `permguard init` writes declares it, with one partition, `cedar`.
+A ledger whose manifest declares other profiles is asked with the profile's name, and its partition inputs are keyed by that profile's partitions.
 
 ### The request
 
@@ -100,7 +102,7 @@ var request = new EvaluateRequest("acme", "main-ledger")
 {
     PartitionInputs = new Dictionary<string, PartitionInput>
     {
-        ["authorization"] = new PartitionInput("permguard.cedar.entities.v1", new[]
+        ["cedar"] = new PartitionInput("permguard.cedar.entities.v1", new[]
         {
             new Dictionary<string, object?>
             {
