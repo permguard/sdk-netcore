@@ -85,6 +85,7 @@ A ledger whose manifest declares other profiles is asked with the profile's name
 | `Context`                       | any other fact the policies read                                        |
 | `PartitionInputs`               | runtime data for the partitions of the profile, see below               |
 | `RequestId`                     | your id for the call, given back in the answer                          |
+| `RequestNonce`                  | asks for a signed response, see below                                   |
 
 ### The answer
 
@@ -92,6 +93,9 @@ A deny is not an exception: it is a successful `EvaluateResponse` with `Decision
 Validation, authorization, availability and server failures throw `Refusal`, with their stable `ErrorClass` and `Code`, and the `HttpStatus` or `GrpcStatus` they came with.
 A call that fails in the client is a `Refusal` too, the same on HTTP and gRPC and in every Permguard SDK: class `unavailable` (`Refusal.Unavailable`) with code `timeout` (`Refusal.Timeout`) when the call's timeout passed, code `unreachable` (`Refusal.Unreachable`) when the data plane could not be reached.
 A cancellation of your own `CancellationToken` is not a refusal: it throws `OperationCanceledException`.
+
+Each decision's `Context.Evidence` says how the plane recorded it: its `Mode`, its `Status` and, once recorded, its `RecordId` and `Position`.
+A request that sets `RequestNonce` (base64url without padding, 16 to 64 bytes) asks for a signed response, and the answer carries the plane's `Attestation`: the plane signs only for an authenticated caller, and refuses with `unauthenticated` rather than answer unsigned.
 
 ## Partition inputs
 
@@ -201,6 +205,10 @@ See the [Authority Plane](https://docs.permguard.com/how-it-works/authority-plan
 This major version implements `permguard.api.pdp.native.v1`.
 Compatibility is tied to that versioned interface, not to a server minor version.
 
+The contract this release carries is the `pdp.proto` of Permguard `v0.1.33`, the tag [PERMGUARD_CONTRACT](PERMGUARD_CONTRACT) names: CI fails when the copy in `Permguard/Grpc` differs from it, and runs the tests against a data plane of that release over HTTP and gRPC.
+It covers the decision interface: a request may ask for a signed response with `RequestNonce`, and the answer carries the plane's `Attestation` and each decision's `Context.Evidence`; the discovery document carries the version, lifecycle, limits and response signing.
+The temporal interface, `permguard.api.pdp.temporal.v1alpha1`, is not covered by this SDK.
+
 ## Develop
 
 ```console
@@ -210,6 +218,8 @@ dotnet pack Permguard/Permguard.csproj --configuration Release
 ```
 
 The tests host an in-process gRPC data plane, so they need the ASP.NET Core 8 runtime (`Microsoft.AspNetCore.App` 8.x) beside the .NET 8 SDK; on a machine with only a newer runtime, `DOTNET_ROLL_FORWARD=Major` runs them on it.
+`Permguard/Grpc/pdp.proto` is the canonical contract of the Permguard release `PERMGUARD_CONTRACT` names, with the C# namespace option added; `bash scripts/check-contract.sh Permguard/Grpc/pdp.proto` checks it.
+`bash scripts/e2e-server.sh` starts that release with a ledger the end-to-end test asks (`E2E_HTTP=http://127.0.0.1:7443 E2E_GRPC=grpc://127.0.0.1:7443 dotnet test Permguard.Tests/Permguard.Tests.csproj --filter Category=E2E`); without those variables the test is skipped, and `E2E_PORT_OFFSET` moves the server's ports when another server holds them.
 The project's version is a placeholder, `0.0.0`: a release takes its version from its tag, so the version to install is the latest on NuGet.
 
 The NuGet package includes `LICENSE`, `NOTICE.md`, `THIRD_PARTY_NOTICES.md` and this README.

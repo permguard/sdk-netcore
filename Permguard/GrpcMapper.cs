@@ -24,6 +24,7 @@ internal static class GrpcMapper
             Principal = ToProto(source.Principal),
             EvaluationsSemantic = ToProto(source.Options?.EvaluationsSemantic ?? EvaluationsSemantic.Unspecified),
             RequestId = source.RequestId ?? "",
+            RequestNonce = source.RequestNonce ?? "",
         };
         AddInputs(result.PartitionInputs, source.PartitionInputs);
         if (source.Evaluations is not null) result.Evaluations.Add(source.Evaluations.Select(ToProto));
@@ -128,6 +129,9 @@ internal static class GrpcMapper
         RequestId = EmptyToNull(source.RequestId),
         Context = FromProto(source.Context),
         Evaluations = source.Evaluations.Select(FromProto).ToArray(),
+        Attestation = source.Attestation is null
+            ? null
+            : new Attestation(source.Attestation.Protected, source.Attestation.Payload, source.Attestation.Signature),
     };
 
     private static DecisionResult FromProto(Proto.Decision source) => new()
@@ -144,6 +148,14 @@ internal static class GrpcMapper
         ReasonUser = FromProto(source.ReasonUser),
         Policies = source.Policies.ToArray(),
         AbsentInputs = source.AbsentInputs.ToArray(),
+        Evidence = source.Evidence is null ? null : new Evidence(source.Evidence.Mode, source.Evidence.Status)
+        {
+            RecordId = source.Evidence.HasRecordId ? source.Evidence.RecordId : null,
+            Position = source.Evidence.Position is null
+                ? null
+                : new EvidencePosition(
+                    source.Evidence.Position.HostId, source.Evidence.Position.Run, source.Evidence.Position.Sequence),
+        },
     };
 
     private static Reason? FromProto(Proto.Reason? source) => source is null
@@ -159,7 +171,20 @@ internal static class GrpcMapper
             source.StoreScope?.In ?? "",
             source.StoreScope?.Zone ?? "",
             source.StoreScope?.Ledger ?? "",
-            source.StoreScope?.Profile ?? ""));
+            source.StoreScope?.Profile ?? ""))
+    {
+        Version = source.Version,
+        Component = source.Component,
+        State = source.State,
+        Stage = source.Stage,
+        Sunset = source.HasSunset ? source.Sunset : null,
+        Limits = new Dictionary<string, ulong>(source.Limits),
+        ResponseSigning = new ResponseSigning(source.ResponseSigning?.State ?? "")
+        {
+            ValiditySeconds = source.ResponseSigning is { ValiditySeconds: > 0 } signing ? signing.ValiditySeconds : null,
+            ClockSkewSeconds = source.ResponseSigning is { ClockSkewSeconds: > 0 } skew ? skew.ClockSkewSeconds : null,
+        },
+    };
 
     private static string? EmptyToNull(string value) => value.Length == 0 ? null : value;
 }
